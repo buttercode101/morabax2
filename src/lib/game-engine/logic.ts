@@ -54,7 +54,9 @@ export function getValidMoves(board: (Player | null)[], node: number, phase: Pha
   }
   // If phase is flying but can't fly (Sesotho), treat as moving
   const config = BOARD_CONFIGS[variant] || BOARD_CONFIGS['standard'];
-  return config.adjacency[node].filter(n => board[n] === null);
+  const neighbors = config.adjacency[node];
+  if (!neighbors) return [];
+  return neighbors.filter(n => board[n] === null);
 }
 
 export function hasValidMoves(board: (Player | null)[], player: Player, phase: Phase, variant: BoardVariant = 'standard'): boolean {

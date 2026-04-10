@@ -3,16 +3,11 @@ import { persist } from 'zustand/middleware';
 import { Player, Phase, GameState, Difficulty, GameMode, BoardVariant, SkinId, Level } from '@/types/game';
 import { getOpponent, isMill, canShoot, getValidMoves, checkWinCondition, getFormedMill, isPartOfMill } from '@/lib/game-engine/logic';
 import { getBestMove } from '@/lib/game-engine/ai';
-import { playSound, syncAudioState, setSoundEnabled, setVolume as setAudioVolume } from '@/lib/audio';
+import { playSound, setSoundEnabled, setVolume as setAudioVolume } from '@/lib/audio';
 import confetti from 'canvas-confetti';
 
 // Unique ID generator for notifications
 let notificationIdCounter = 0;
-
-// Helper: compute board hash for threefold repetition detection
-function boardHash(board: (Player | null)[], turn: Player, phase: Phase): string {
-  return `${board.join(',')}-${turn}-${phase}`;
-}
 
 // Helper: apply a completed move to state (used by both human and AI)
 function applyMoveToState(
@@ -146,24 +141,24 @@ interface GameStore extends GameState {
   importGameState: (encoded: string) => void;
 }
 
-const initialState: Omit<GameState, 'variant' | 'soundEnabled' | 'isSettingsOpen' | 'coins' | 'stats' | 'unlockedSkins' | 'currentSkin' | 'progress' | 'currentLevelId' | 'showHint'> = {
-  board: Array(24).fill(null),
-  turn: 'player1',
-  phase: 'placing',
+const initialState = {
+  board: Array(24).fill(null) as (Player | null)[],
+  turn: 'player1' as Player,
+  phase: 'placing' as Phase,
   unplacedCows: { player1: 12, player2: 12 },
   cowsOnBoard: { player1: 0, player2: 0 },
   capturedCows: { player1: 0, player2: 0 },
-  selectedNode: null,
+  selectedNode: null as number | null,
   shootMode: false,
-  winner: null,
-  moveHistory: [],
+  winner: null as Player | 'draw' | null,
+  moveHistory: [] as string[],
   movesWithoutShoot: 0,
-  activeMill: null,
-  lastMove: null,
+  activeMill: null as number[] | null,
+  lastMove: null as { from: number | null, to: number } | null,
   elapsedTime: 0,
-  markedNodes: [],
-  lastLeveledUp: null,
-  boardHistory: [],
+  markedNodes: [] as number[],
+  lastLeveledUp: null as number | null,
+  boardHistory: [] as string[],
 };
 
 export const useGameStore = create<GameStore>()(
@@ -184,6 +179,12 @@ export const useGameStore = create<GameStore>()(
       currentLevelId: null,
       showHint: null,
       isRotated: false,
+      undoCount: 0,
+      showNotation: false,
+      volume: 0.7,
+      player1Name: 'Player 1',
+      player2Name: 'Player 2',
+      gameNotifications: [],
       progress: {
         xp: 0,
         level: 1,
@@ -256,7 +257,7 @@ export const useGameStore = create<GameStore>()(
           lastMove: state.lastMove, elapsedTime: state.elapsedTime,
           markedNodes: state.markedNodes, progress: state.progress,
           currentLevelId: state.currentLevelId, showHint: state.showHint,
-          lastLeveledUp: state.lastLeveledUp
+          lastLeveledUp: state.lastLeveledUp, boardHistory: state.boardHistory,
         } });
       },
 
@@ -368,11 +369,6 @@ export const useGameStore = create<GameStore>()(
         playSound('start');
       },
 
-      continueFromAd: () => {
-        set({ winner: null });
-        get().undo(); // Undo the last move that caused the loss
-      },
-
       undo: () => {
         set((state) => {
           if (state.history.length === 0) return state;
@@ -404,7 +400,7 @@ export const useGameStore = create<GameStore>()(
 
         // Save history before move
         const saveHistory = () => {
-          const boardHash = `${board.join(',')}-${turn}`;
+          const bh = `${state.board.join(',')}-${state.turn}`;
           set(s => ({
             history: [...s.history, {
               board: [...s.board], turn: s.turn, phase: s.phase, unplacedCows: {...s.unplacedCows},
@@ -415,8 +411,9 @@ export const useGameStore = create<GameStore>()(
               activeMill: s.activeMill, lastMove: s.lastMove, elapsedTime: s.elapsedTime,
               markedNodes: [...s.markedNodes], progress: {...s.progress},
               currentLevelId: s.currentLevelId, showHint: s.showHint, lastLeveledUp: s.lastLeveledUp,
+              boardHistory: [...s.boardHistory, bh],
             }],
-            boardHistory: [...s.boardHistory, boardHash],
+            boardHistory: [...s.boardHistory, bh],
           }));
         };
 
@@ -822,7 +819,6 @@ export const useGameStore = create<GameStore>()(
       importGameState: (encoded) => {
         try {
           const data = JSON.parse(atob(encoded));
-          const state = get();
           set({
             board: data.board,
             turn: data.turn,

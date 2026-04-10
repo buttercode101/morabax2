@@ -1,5 +1,3 @@
-import { BoardVariant } from '@/types/game';
-
 const ADJACENCY_STANDARD: number[][] = [
   // Outer (0-7)
   [1, 7, 8],    // 0: A7

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function GameBoard() {
-  const { board, handleNodeClick, variant, activeMill, lastMove, isRotated, selectedNode, shootMode, turn, phase, showNotation } = useGameStore();
+  const { board, handleNodeClick, variant, activeMill, isRotated, selectedNode, shootMode, turn, phase, showNotation } = useGameStore();
 
   const config = BOARD_CONFIGS[variant] || BOARD_CONFIGS['standard'];
   const { coords } = config;
@@ -146,11 +146,11 @@ export function GameBoard() {
           {coords.map((coord, idx) => {
             const isOccupied = board[idx] !== null;
             const isShootable = shootMode && canShoot(board, idx, getOpponent(turn), variant);
-            const isMillPart = activeMill?.includes(idx) ?? false;
-            const isLastMove = lastMove?.to === idx || lastMove?.from === idx;
+            const isMillHighlight = activeMill?.includes(idx) ?? false;
+            const isHint = idx === useGameStore.getState().showHint;
 
-            const isValidMove = phase === 'placing' 
-              ? board[idx] === null 
+            const isValidMove = phase === 'placing'
+              ? board[idx] === null
               : (selectedNode !== null && getValidMoves(board, selectedNode, phase, variant).includes(idx));
 
             return (
@@ -166,12 +166,12 @@ export function GameBoard() {
                   </div>
                 )}
                 
-                <Node 
-                  index={idx} 
+                <Node
+                  index={idx}
                   isValidMove={isValidMove}
-                  isLastMove={isLastMove}
-                  isMillPart={isMillPart}
-                  onClick={() => handleNodeClick(idx)} 
+                  isMillPart={isMillHighlight}
+                  isHint={isHint}
+                  onClick={() => handleNodeClick(idx)}
                 />
                 {isOccupied && (
                   <AnimatePresence mode="popLayout">
@@ -188,7 +188,7 @@ export function GameBoard() {
                         player={board[idx]!} 
                         selected={selectedNode === idx}
                         shootable={isShootable}
-                        isActiveMill={isMillPart}
+                        isActiveMill={isMillHighlight}
                         onClick={() => handleNodeClick(idx)}
                         className="pointer-events-auto"
                       />

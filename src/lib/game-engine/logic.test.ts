@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { getOpponent, isMill, canShoot, getValidMoves, hasValidMoves, checkWinCondition, getFormedMill } from './logic';
-import { BOARD_CONFIGS } from './constants';
 import type { GameState, Player, BoardVariant } from '@/types/game';
 
 describe('Game Logic', () => {
-  const standardConfig = BOARD_CONFIGS.standard;
 
   describe('getOpponent', () => {
     it('should return player2 when given player1', () => {
@@ -149,6 +147,7 @@ describe('Game Logic', () => {
       currentLevelId: null,
       showHint: null,
       lastLeveledUp: null,
+      boardHistory: [],
       ...overrides,
     });
 

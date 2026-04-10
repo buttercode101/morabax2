@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameStore, LEVELS } from '@/store/gameStore';
-import { Play, Users, Settings as SettingsIcon, BookOpen, Trophy, ArrowRight, X, Volume2, VolumeX, Home, Coins, ShoppingCart, BarChart2, Globe, Save, Map as MapIcon, Star, Lock, ChevronRight, Zap, Target, RotateCcw, LayoutGrid, ShieldAlert, Share2 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { Play, Users, Settings as SettingsIcon, BookOpen, Trophy, ArrowRight, X, Volume2, VolumeX, Coins, ShoppingCart, BarChart2, Globe, Save, Map as MapIcon, Star, Lock, ChevronRight, Zap, Target, RotateCcw, LayoutGrid, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Piece } from './Piece';
 import { cn } from '@/lib/utils';
@@ -53,8 +52,8 @@ export function GameNotifications() {
   );
 }
 
-export function LandingScreen({ onStart, onResume, onNavigate }: { onStart: () => void, onResume?: () => void, onNavigate: (state: any) => void }) {
-  const { setMode, setDifficulty, difficulty, setSettingsOpen, savedSlot, loadFromSlot } = useGameStore();
+export function LandingScreen({ onStart, onNavigate }: { onStart: () => void, onNavigate: (state: any) => void }) {
+  const { setMode, setSettingsOpen, savedSlot, loadFromSlot } = useGameStore();
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden w-full bg-earth-950">
@@ -230,7 +229,8 @@ export function CampaignScreen({ onBack, onStartLevel }: { onBack: () => void, o
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {LEVELS.map((level, index) => {
-          const isUnlocked = index === 0 || (progress?.completedLevels || []).includes(LEVELS[index - 1].id);
+          const prevLevel = LEVELS[index - 1];
+          const isUnlocked = index === 0 || (progress?.completedLevels || []).includes(prevLevel?.id ?? -1);
           const stars = progress?.levelStars?.[level.id] || 0;
 
           return (
@@ -813,7 +813,7 @@ export function LevelUpOverlay() {
 export function TutorialScreen({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [tutorialBoard, setTutorialBoard] = useState<(Player | null)[]>(Array(24).fill(null));
-  const [tutorialPhase, setTutorialPhase] = useState<'placing' | 'moving' | 'shooting'>('placing');
+  const [_tutorialPhase, setTutorialPhase] = useState<'placing' | 'moving' | 'shooting'>('placing');
   const [highlightedNodes, setHighlightedNodes] = useState<number[]>([]);
 
   const steps = [
@@ -888,8 +888,9 @@ export function TutorialScreen({ onClose }: { onClose: () => void }) {
   ];
 
   useEffect(() => {
-    if (steps[step].setup) {
-      steps[step].setup();
+    const currentStep = steps[step];
+    if (currentStep?.setup) {
+      currentStep.setup();
     }
   }, [step]);
 
@@ -899,9 +900,11 @@ export function TutorialScreen({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const currentStep = steps[step]!;
+
   return (
     <div className="fixed inset-0 bg-earth-950 z-50 flex flex-col items-center justify-center p-4 md:p-12 overflow-y-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="max-w-6xl w-full leather-panel p-8 md:p-16 rounded-[4rem] shadow-2xl relative border border-earth-700/30 overflow-hidden"
@@ -921,10 +924,10 @@ export function TutorialScreen({ onClose }: { onClose: () => void }) {
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-gold-700/30 to-transparent" />
               </div>
-              <h2 className="text-4xl md:text-6xl font-display font-black text-earth-100 engraved-text leading-tight">{steps[step].title}</h2>
+              <h2 className="text-4xl md:text-6xl font-display font-black text-earth-100 engraved-text leading-tight">{currentStep.title}</h2>
             </div>
             <p className="text-xl text-earth-400 leading-relaxed font-serif italic border-l-4 border-gold-700/50 pl-8">
-              {steps[step].description}
+              {currentStep.description}
             </p>
             
             <div className="pt-10 flex gap-6">
@@ -936,14 +939,14 @@ export function TutorialScreen({ onClose }: { onClose: () => void }) {
                   Back
                 </button>
               )}
-              {steps[step].action && (
+              {currentStep.action && (
                 <button 
                   onClick={() => step === steps.length - 1 ? onClose() : setStep(s => s + 1)} 
                   className="premium-button group px-10 py-4 bg-gold-700 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl hover:bg-gold-600 transition-all flex items-center gap-3 relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   <span className="relative z-10 flex items-center gap-2">
-                    {steps[step].action} <ArrowRight size={20} />
+                    {currentStep.action} <ArrowRight size={20} />
                   </span>
                 </button>
               )}

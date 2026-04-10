@@ -75,7 +75,7 @@ function evaluateBoard(board: (Player | null)[], player: Player, phase: Phase, u
 }
 
 // Get all possible moves (including shooting)
-function generateMoves(board: (Player | null)[], player: Player, phase: Phase, unplaced: Record<Player, number>, variant: BoardVariant) {
+function generateMoves(board: (Player | null)[], player: Player, _phase: Phase, unplaced: Record<Player, number>, variant: BoardVariant) {
   const moves: { from: number | null, to: number, shoot: number | null }[] = [];
   const opponent = getOpponent(player);
   const canFly = variant !== 'sesotho';

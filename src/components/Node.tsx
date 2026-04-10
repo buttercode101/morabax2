@@ -1,21 +1,21 @@
 import { BOARD_CONFIGS } from '@/lib/game-engine/constants';
 import { useGameStore } from '@/store/gameStore';
 import { cn } from '@/lib/utils';
-import { motion } from 'motion/react';
 
 interface NodeProps {
   index: number;
   isValidMove: boolean;
-  isLastMove?: boolean;
   isMillPart?: boolean;
   isHint?: boolean;
   onClick: () => void;
 }
 
-export function Node({ index, isValidMove, isLastMove, isMillPart, isHint, onClick }: NodeProps) {
+export function Node({ index, isValidMove, isMillPart, isHint, onClick }: NodeProps) {
   const { variant, markedNodes } = useGameStore();
   const config = BOARD_CONFIGS[variant] || BOARD_CONFIGS['standard'];
-  const { x, y } = config.coords[index];
+  const coord = config.coords[index];
+  if (!coord) return null;
+  const { x, y } = coord;
   const isMarked = (markedNodes || []).includes(index);
 
   // Haptic feedback helper

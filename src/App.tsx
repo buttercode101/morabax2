@@ -10,8 +10,7 @@ export type AppState = 'landing' | 'playing' | 'tutorial' | 'shop' | 'stats' | '
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('landing');
-  const { winner, startNewGame, currentLevelId, soundEnabled, importGameState, savedSlot } = useGameStore();
-  const history = useGameStore((s) => s.history);
+  const { winner, startNewGame, currentLevelId, soundEnabled, importGameState } = useGameStore();
 
   // Handle shared game links on mount
   useEffect(() => {
@@ -38,10 +37,6 @@ export default function App() {
 
   const handleStart = (levelId?: number) => {
     startNewGame(levelId);
-    setAppState('playing');
-  };
-
-  const handleResume = () => {
     setAppState('playing');
   };
 
@@ -72,7 +67,6 @@ export default function App() {
             >
               <LandingScreen 
                 onStart={handleStart} 
-                onResume={(savedSlot || (history || []).length > 0) && !winner ? handleResume : undefined}
                 onNavigate={(state) => setAppState(state)} 
               />
             </motion.div>

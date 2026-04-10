@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore, LEVELS } from '@/store/gameStore';
 import { Player } from '@/types/game';
-import { Undo2, Settings as SettingsIcon, Home, Coins, RotateCcw, Clock, Lightbulb, Zap, RefreshCw, Share2 } from 'lucide-react';
+import { Undo2, Settings as SettingsIcon, Home, Coins, Clock, Lightbulb, Zap, RefreshCw, Share2 } from 'lucide-react';
 import { Piece } from './Piece';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 export function GameUI({ onHome }: { onHome: () => void }) {
-  const { turn, phase, unplacedCows, capturedCows, shootMode, undo, mode, setSettingsOpen, coins, startNewGame, elapsedTime, setElapsedTime, winner, isSettingsOpen, progress, getHint, isRotated, setRotated, player1Name, player2Name, exportGameState, addNotification, undoCount } = useGameStore();
+  const { turn, phase, unplacedCows, capturedCows, shootMode, undo, mode, setSettingsOpen, coins, elapsedTime, setElapsedTime, winner, isSettingsOpen, progress, getHint, isRotated, setRotated, player1Name, exportGameState, addNotification, undoCount } = useGameStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleShare = () => {
